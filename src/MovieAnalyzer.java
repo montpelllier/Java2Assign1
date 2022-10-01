@@ -21,6 +21,25 @@ public class MovieAnalyzer {
     public List<Movie> movieList;
 
     /**
+     * The constructor of {@code MovieAnalyzer} takes the path of the dataset file and reads the
+     * data. The dataset is in csv format and has the following columns: Series_Title - Name of the
+     * movie; Released_Year - Year at which that movie released; Certificate - Certificate earned by
+     * that movie; Runtime - Total runtime of the movie; Genre - Genre of the movie; IMDB_Rating -
+     * Rating of the movie at IMDB site; Overview - mini story / summary; Meta_score - Score earned
+     * by the movie; Director - Name of the Director; Star1,Star2,Star3,Star4 - Name of the Stars;
+     * No_of_votes - Total number of votes; Gross - Money earned by that movie.
+     *
+     * @param datasetPath the path of the dataset file
+     */
+    public MovieAnalyzer(String datasetPath) {
+        try {
+            movieList = readMovies(datasetPath).toList();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
      * Parse the csv file into Movie stream.
      *
      * @param filename The file path name.
@@ -93,11 +112,9 @@ public class MovieAnalyzer {
     private List<String> getCoStar(String star1, String star2) {
         List<String> stars = new ArrayList<>(2);
         //不考虑重名？
-        /*
-        if (star1.equals(star2)) {
-            return null;
-        }
-         */
+//        if (star1.equals(star2)) {
+//            return null;
+//        }
         if (star1.compareTo(star2) < 0) {
             stars.add(star1);
             stars.add(star2);
@@ -133,7 +150,7 @@ public class MovieAnalyzer {
     }
 
     /**
-     * A method returns the top K movies (parameter top_k) by the given criterion (parameter by).
+     * This method returns the top K movies (parameter top_k) by the given criterion (parameter by).
      * Specifically, by="runtime": the results should be movies sorted by descending order of
      * runtime (from the longest movies to the shortest movies) . by="overview": the results should
      * be movies sorted by descending order of the length of the overview (from movies with the
