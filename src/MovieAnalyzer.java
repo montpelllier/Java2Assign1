@@ -160,9 +160,8 @@ public class MovieAnalyzer {
    * Specifically, by="runtime": the results should be movies sorted by descending order of runtime
    * (from the longest movies to the shortest movies) . by="overview": the results should be movies
    * sorted by descending order of the length of the overview (from movies with the longest overview
-   * to movies with the shortest overview). Note that the results should be a list of movie titles.
-   * If two movies have the same runtime or overview length, then they should be sorted by
-   * alphabetical order of their titles.
+   * to movies with the shortest overview). If two movies have the same runtime or overview length,
+   * then they should be sorted by alphabetical order of their titles.
    *
    * @param topK The top number.
    * @param by   The given criterion.
@@ -192,8 +191,40 @@ public class MovieAnalyzer {
     }).map(movie -> movie.seriesTitle).limit(topK).toList();
   }
 
+  /**
+   * A method returns the top K stars (parameter top_k) by the given criterion (parameter by).
+   * Specifically, by="rating": the results should be stars sorted by descending order of the
+   * average rating of the movies that s/he has starred in. by="gross": the results should be stars
+   * sorted by descending order of the average gross of the movies that s/he has starred in. If two
+   * stars have the same average rating or gross, then they should be sorted by the alphabetical
+   * order of their names.
+   *
+   * @param topK The top number.
+   * @param by   The given criterion.
+   * @return a list of star names.
+   */
   public List<String> getTopStars(int topK, String by) {
-    return null;
+    return movieList.stream().sorted((m1, m2) -> {
+      switch (by) {
+        case "rating" -> {
+          if (m1.runtime.equals(m2.runtime)) {
+            return m1.seriesTitle.compareTo(m2.seriesTitle);
+          } else {
+            return m2.runtime.compareTo(m1.runtime);
+          }
+        }
+        case "gross" -> {
+          if (m1.overview.length() == m2.overview.length()) {
+            return m1.seriesTitle.compareTo(m2.seriesTitle);
+          } else {
+            return m2.overview.length() - m1.overview.length();
+          }
+        }
+        default -> {
+          return 0;
+        }
+      }
+    }).map(movie -> movie.seriesTitle).limit(topK).toList();
   }
 
   public List<String> searchMovies(String genre, float minRating, int maxRuntime) {
