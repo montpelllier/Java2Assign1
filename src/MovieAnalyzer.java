@@ -2,9 +2,11 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -23,7 +25,7 @@ public class MovieAnalyzer {
         private final Integer releasedYear;
         private final String certificate;
         private final Integer runtime;
-        private final String genre;
+        private final List<String> genreList;
         private final Float imdbRating;
         private final String overview;
         private final Integer metaScore;
@@ -40,20 +42,24 @@ public class MovieAnalyzer {
             return releasedYear;
         }
 
-        public Movie(String title, Integer year, String certificate, Integer runtime, String genre,
-                Float rating, String overview, Integer score, String director, String star1,
-                String star2,
-                String star3, String star4, Integer noOfVotes, Integer gross) {
+        public List<String> getGenreList() {
+            return genreList;
+        }
+
+        public Movie(String title, Integer year, String certificate, Integer runtime,
+                List<String> genreList,
+                Float rating, String overview, Integer score, String director, String[] stars,
+                Integer noOfVotes, Integer gross) {
             this.seriesTitle = title;
             this.releasedYear = year;
             this.certificate = certificate;
             this.runtime = runtime;
-            this.genre = genre;
+            this.genreList = genreList;
             this.imdbRating = rating;
             this.overview = overview;
             this.metaScore = score;
             this.director = director;
-            this.stars = new String[]{star1, star2, star3, star4};
+            this.stars = stars;
             this.noOfVotes = noOfVotes;
             this.gross = gross;
         }
@@ -61,33 +67,35 @@ public class MovieAnalyzer {
         public String toString() {
             return String.format(
                     "Movie{Title=%s, Year=%d, Certificate=%s, Runtime=%d, Genre=%s, IMDB_Rating=%f, Meta_score=%d, Director=%s, Stars=%s, No_of_votes=%d, Gross=%d}",
-                    seriesTitle, releasedYear, certificate, runtime, genre, imdbRating, metaScore,
+                    seriesTitle, releasedYear, certificate, runtime, genreList, imdbRating,
+                    metaScore,
                     director,
                     Arrays.toString(stars), noOfVotes, gross);
         }
 
     }
 
-    private Stream<Movie> movieStream;
+    public List<Movie> movieList;
 
     public static Stream<Movie> readMovies(String filename) throws IOException {
         return Files.lines(Paths.get(filename))
-                .skip(1)
+                .skip(1) // skip the first row
                 .map(line -> line.split(",(?=([^\"]*\"[^\"]*\")*[^\"]*$)"))
                 .map(s -> {
-                    String title = s[1].substring(1, s[1].length() - 1);
                     Integer year = s[2].equals("") ? null : Integer.parseInt(s[2]);
                     Integer runtime =
                             s[4].equals("") ? null
                                     : Integer.parseInt(s[4].substring(0, s[4].length() - 4));
+                    String genre =
+                            s[5].contains("\"") ? s[5].substring(1, s[5].length() - 1) : s[5];
                     Float rating = s[6].equals("") ? null : Float.parseFloat(s[6]);
                     Integer score = s[8].equals("") ? null : Integer.parseInt(s[8]);
                     Integer noOfVotes = s[14].equals("") ? null : Integer.parseInt(s[14]);
                     Integer gross = s.length == 16 && !s[15].equals("") ? Integer.parseInt(
                             s[15].substring(1, s[15].length() - 1).replace(",", "")) : null;
-                    return new Movie(title, year, s[3], runtime, s[5], rating, s[7], score, s[9],
-                            s[10],
-                            s[11], s[12], s[13], noOfVotes, gross);
+                    return new Movie(s[1], year, s[3], runtime, Arrays.asList(genre.split(", ")),
+                            rating, s[7], score, s[9],
+                            new String[]{s[10], s[11], s[12], s[13]}, noOfVotes, gross);
                 });
     }
 
@@ -105,21 +113,51 @@ public class MovieAnalyzer {
      */
     public MovieAnalyzer(String datasetPath) {
         try {
-            this.movieStream = readMovies(datasetPath);
+            movieList = readMovies(datasetPath).toList();
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
+    /**
+     * This method returns a {@code <year, count>} map, where the key is the year while the value is
+     * the number of movies released in that year. The map should be sorted by descending order of
+     * year (i.e., from the latest to the earliest).
+     *
+     * @return a {@code <year, count>} map
+     */
     public Map<Integer, Integer> getMovieCountByYear() {
-        return movieStream.filter(movie -> movie.getReleasedYear() != null).collect(
+        // use TreeMap to get descending order key map
+        return movieList.stream().filter(movie -> movie.getReleasedYear() != null).collect(
                         Collectors.groupingBy(Movie::getReleasedYear, TreeMap::new,
                                 Collectors.summingInt(i -> 1)))
                 .descendingMap();
     }
 
+    /**
+     * This method returns a {@code <genre, count>} map, where the key is the genre while the value
+     * is the number of movies in that genre. The map should be sorted by descending order of count
+     * (i.e., from the most frequent genre to the least frequent genre). If two genres have the same
+     * count, then they should be sorted by the alphabetical order of the genre names.
+     *
+     * @return a {@code <genre, count>} map
+     */
     public Map<String, Integer> getMovieCountByGenre() {
-        return null;
+        // Approach 1: 先得到map，再对map进行降序排序等操作
+        Map<String, Integer> unsortedMap = movieList.stream()
+                .filter(movie -> movie.getGenreList() != null)
+                .flatMap(movie -> movie.getGenreList().stream()).collect(
+                        Collectors.groupingBy(Function.identity(), Collectors.summingInt(i -> 1)));
+        return unsortedMap
+                .entrySet().stream().sorted((v1, v2) -> {
+                    if (v1.getValue().equals(v2.getValue())) {
+                        return v1.getKey().compareTo(v2.getKey());
+                    } else {
+                        return v2.getValue().compareTo(v1.getValue());
+                    }
+                }).collect(
+                        Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (m1, m2) -> m2,
+                                LinkedHashMap::new));
     }
 
     public Map<List<String>, Integer> getCoStarCount() {
