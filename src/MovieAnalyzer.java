@@ -30,7 +30,12 @@ public class MovieAnalyzer {
         private final String overview;
         private final Integer metaScore;
         private final String director;
-        private final String[] stars;
+        //        private final String[] stars;
+        private final String star1;
+        private final String star2;
+        private final String star3;
+        private final String star4;
+
         private final Integer noOfVotes;
         private final Integer gross;
 
@@ -46,9 +51,30 @@ public class MovieAnalyzer {
             return genreList;
         }
 
+        /**
+         * The constructor of Movie.
+         *
+         * @param title       Name of the movie.
+         * @param year        Year at which that movie released.
+         * @param certificate Certificate earned by that movie.
+         * @param runtime     Total runtime of the movie.
+         * @param genreList   Genre of the movie.
+         * @param rating      Rating of the movie at IMDB site.
+         * @param overview    mini story / summary.
+         * @param score       Score earned by the movie.
+         * @param director    Name of the Director.
+         * @param star1       Name of the Stars.
+         * @param star2       Name of the Stars.
+         * @param star3       Name of the Stars.
+         * @param star4       Name of the Stars.
+         * @param noOfVotes   Total number of votes.
+         * @param gross       Money earned by that movie.
+         */
+
         public Movie(String title, Integer year, String certificate, Integer runtime,
                 List<String> genreList,
-                Float rating, String overview, Integer score, String director, String[] stars,
+                Float rating, String overview, Integer score, String director, String star1,
+                String star2, String star3, String star4,
                 Integer noOfVotes, Integer gross) {
             this.seriesTitle = title;
             this.releasedYear = year;
@@ -59,24 +85,40 @@ public class MovieAnalyzer {
             this.overview = overview;
             this.metaScore = score;
             this.director = director;
-            this.stars = stars;
+            this.star1 = star1;
+            this.star2 = star2;
+            this.star3 = star3;
+            this.star4 = star4;
             this.noOfVotes = noOfVotes;
             this.gross = gross;
         }
 
+        /**
+         * Returns a string representation of all the values.
+         *
+         * @return a string representation of all the values.
+         */
         public String toString() {
             return String.format(
-                    "Movie{Title=%s, Year=%d, Certificate=%s, Runtime=%d, Genre=%s, IMDB_Rating=%f, Meta_score=%d, Director=%s, Stars=%s, No_of_votes=%d, Gross=%d}",
+                    "Movie{Title=%s, Year=%d, Certificate=%s, Runtime=%d, Genre=%s, IMDB_Rating=%f"
+                            + ", Meta_score=%d, Director=%s, Stars=%s, No_of_votes=%d, Gross=%d}",
                     seriesTitle, releasedYear, certificate, runtime, genreList, imdbRating,
                     metaScore,
                     director,
-                    Arrays.toString(stars), noOfVotes, gross);
+                    Arrays.toString(new String[]{star1, star2, star3, star4}), noOfVotes, gross);
         }
 
     }
 
     public List<Movie> movieList;
 
+    /**
+     * Parse the csv file into Movie stream.
+     *
+     * @param filename The file path name.
+     * @return a stream of Movie.
+     * @throws IOException if the filename is not correct.
+     */
     public static Stream<Movie> readMovies(String filename) throws IOException {
         return Files.lines(Paths.get(filename))
                 .skip(1) // skip the first row
@@ -95,19 +137,18 @@ public class MovieAnalyzer {
                             s[15].substring(1, s[15].length() - 1).replace(",", "")) : null;
                     return new Movie(s[1], year, s[3], runtime, Arrays.asList(genre.split(", ")),
                             rating, s[7], score, s[9],
-                            new String[]{s[10], s[11], s[12], s[13]}, noOfVotes, gross);
+                            s[10], s[11], s[12], s[13], noOfVotes, gross);
                 });
     }
 
     /**
      * The constructor of {@code MovieAnalyzer} takes the path of the dataset file and reads the
-     * data. The dataset is in csv format and has the following columns: <br/> Series_Title - Name
-     * of the movie <br/> Released_Year - Year at which that movie released <br/> Certificate -
-     * Certificate earned by that movie <br/> Runtime - Total runtime of the movie <br/> Genre -
-     * Genre of the movie <br/> IMDB_Rating - Rating of the movie at IMDB site <br/> Overview - mini
-     * story/ summary <br/> Meta_score - Score earned by the movie <br/> Director - Name of the
-     * Director <br/> Star1,Star2,Star3,Star4 - Name of the Stars <br/> No_of_votes - Total number
-     * of votes <br/> Gross - Money earned by that movie <br/>
+     * data. The dataset is in csv format and has the following columns: Series_Title - Name of the
+     * movie; Released_Year - Year at which that movie released; Certificate - Certificate earned by
+     * that movie; Runtime - Total runtime of the movie; Genre - Genre of the movie; IMDB_Rating -
+     * Rating of the movie at IMDB site; Overview - mini story / summary; Meta_score - Score earned
+     * by the movie; Director - Name of the Director; Star1,Star2,Star3,Star4 - Name of the Stars;
+     * No_of_votes - Total number of votes; Gross - Money earned by that movie.
      *
      * @param datasetPath the path of the dataset file
      */
@@ -120,7 +161,7 @@ public class MovieAnalyzer {
     }
 
     /**
-     * This method returns a {@code <year, count>} map, where the key is the year while the value is
+     * A method returns a {@code <year, count>} map, where the key is the year while the value is
      * the number of movies released in that year. The map should be sorted by descending order of
      * year (i.e., from the latest to the earliest).
      *
@@ -135,15 +176,15 @@ public class MovieAnalyzer {
     }
 
     /**
-     * This method returns a {@code <genre, count>} map, where the key is the genre while the value
-     * is the number of movies in that genre. The map should be sorted by descending order of count
+     * A method returns a {@code <genre, count>} map, where the key is the genre while the value is
+     * the number of movies in that genre. The map should be sorted by descending order of count
      * (i.e., from the most frequent genre to the least frequent genre). If two genres have the same
      * count, then they should be sorted by the alphabetical order of the genre names.
      *
      * @return a {@code <genre, count>} map
      */
     public Map<String, Integer> getMovieCountByGenre() {
-        // Approach 1: 先得到map，再对map进行降序排序等操作
+        // Approach 1: 先合并List<String>的stream得到未排序的map，再对map进行降序排序等操作
         Map<String, Integer> unsortedMap = movieList.stream()
                 .filter(movie -> movie.getGenreList() != null)
                 .flatMap(movie -> movie.getGenreList().stream()).collect(
@@ -160,6 +201,15 @@ public class MovieAnalyzer {
                                 LinkedHashMap::new));
     }
 
+    /**
+     * If two people are the stars for the same movie, then the number of movies that they
+     * co-starred increases by 1. This method returns a {@code <[star1, star2], count>} map, where
+     * the key is a list of names of the stars while the value is the number of movies that they
+     * have co-starred in. Note that the length of the key is 2 and the names of the stars should be
+     * sorted by alphabetical order in the list.
+     *
+     * @return a {@code <[star1, star2], count>} map
+     */
     public Map<List<String>, Integer> getCoStarCount() {
         return null;
     }
