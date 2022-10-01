@@ -18,122 +18,6 @@ import java.util.stream.Stream;
  */
 public class MovieAnalyzer {
 
-    /**
-     * The Movie class stores some movie information.
-     */
-    public static class Movie {
-
-        private final String seriesTitle;
-        private final Integer releasedYear;
-        private final String certificate;
-        private final Integer runtime;
-        private final List<String> genreList;
-        private final Float imdbRating;
-        private final String overview;
-        private final Integer metaScore;
-        private final String director;
-        private final String[] stars;
-//        private final String star1;
-//        private final String star2;
-//        private final String star3;
-//        private final String star4;
-
-        private final Integer noOfVotes;
-        private final Integer gross;
-
-        public String getSeriesTitle() {
-            return seriesTitle;
-        }
-
-        public Integer getReleasedYear() {
-            return releasedYear;
-        }
-
-        public List<String> getGenreList() {
-            return genreList;
-        }
-
-        public String[] getStars() {
-            return stars;
-        }
-
-        //        public String getStar1() {
-//            return star1;
-//        }
-//
-//        public String getStar2() {
-//            return star2;
-//        }
-//
-//        public String getStar3() {
-//            return star3;
-//        }
-//
-//        public String getStar4() {
-//            return star4;
-//        }
-
-
-        /**
-         * The constructor of Movie.
-         *
-         * @param title       Name of the movie.
-         * @param year        Year at which that movie released.
-         * @param certificate Certificate earned by that movie.
-         * @param runtime     Total runtime of the movie.
-         * @param genreList   Genre of the movie.
-         * @param rating      Rating of the movie at IMDB site.
-         * @param overview    mini story / summary.
-         * @param score       Score earned by the movie.
-         * @param director    Name of the Director.
-         * @param star1       Name of the Stars.
-         * @param star2       Name of the Stars.
-         * @param star3       Name of the Stars.
-         * @param star4       Name of the Stars.
-         * @param noOfVotes   Total number of votes.
-         * @param gross       Money earned by that movie.
-         */
-
-        public Movie(String title, Integer year, String certificate, Integer runtime,
-                List<String> genreList,
-                Float rating, String overview, Integer score, String director, String star1,
-                String star2, String star3, String star4,
-                Integer noOfVotes, Integer gross) {
-            this.seriesTitle = title;
-            this.releasedYear = year;
-            this.certificate = certificate;
-            this.runtime = runtime;
-            this.genreList = genreList;
-            this.imdbRating = rating;
-            this.overview = overview;
-            this.metaScore = score;
-            this.director = director;
-//            this.star1 = star1;
-//            this.star2 = star2;
-//            this.star3 = star3;
-//            this.star4 = star4;
-            this.stars = new String[]{star1, star2, star3, star4};
-            this.noOfVotes = noOfVotes;
-            this.gross = gross;
-        }
-
-        /**
-         * Returns a string representation of all the values.
-         *
-         * @return a string representation of all the values.
-         */
-        public String toString() {
-            return String.format(
-                    "Movie{Title=%s, Year=%d, Certificate=%s, Runtime=%d, Genre=%s, IMDB_Rating=%f"
-                            + ", Meta_score=%d, Director=%s, Stars=%s, No_of_votes=%d, Gross=%d}",
-                    seriesTitle, releasedYear, certificate, runtime, genreList, imdbRating,
-                    metaScore,
-                    director,
-                    Arrays.toString(stars), noOfVotes, gross);
-        }
-
-    }
-
     public List<Movie> movieList;
 
     /**
@@ -163,25 +47,6 @@ public class MovieAnalyzer {
                             rating, s[7], score, s[9],
                             s[10], s[11], s[12], s[13], noOfVotes, gross);
                 });
-    }
-
-    /**
-     * The constructor of {@code MovieAnalyzer} takes the path of the dataset file and reads the
-     * data. The dataset is in csv format and has the following columns: Series_Title - Name of the
-     * movie; Released_Year - Year at which that movie released; Certificate - Certificate earned by
-     * that movie; Runtime - Total runtime of the movie; Genre - Genre of the movie; IMDB_Rating -
-     * Rating of the movie at IMDB site; Overview - mini story / summary; Meta_score - Score earned
-     * by the movie; Director - Name of the Director; Star1,Star2,Star3,Star4 - Name of the Stars;
-     * No_of_votes - Total number of votes; Gross - Money earned by that movie.
-     *
-     * @param datasetPath the path of the dataset file
-     */
-    public MovieAnalyzer(String datasetPath) {
-        try {
-            movieList = readMovies(datasetPath).toList();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 
     /**
@@ -227,9 +92,12 @@ public class MovieAnalyzer {
 
     private List<String> getCoStar(String star1, String star2) {
         List<String> stars = new ArrayList<>(2);
-//        if (star1.equals(star2)) {
-//            return null;
-//        }
+        //不考虑重名？
+        /*
+        if (star1.equals(star2)) {
+            return null;
+        }
+         */
         if (star1.compareTo(star2) < 0) {
             stars.add(star1);
             stars.add(star2);
@@ -251,8 +119,7 @@ public class MovieAnalyzer {
      * @return a {@code <[star1, star2], count>} map
      */
     public Map<List<String>, Integer> getCoStarCount() {
-        // Approach 1: 先得到循环得到List<Lit<String>>， 再转stream计数
-        // Approach 2: 重写hashCode和equals方法？
+        // Approach 1: 先循环得到coStar的List<Lit<String>>， 再转stream计数
         List<List<String>> coStarList = new ArrayList<>();
         for (Movie movie : movieList) {
             for (int i = 0; i < 4; i++) {
@@ -263,12 +130,10 @@ public class MovieAnalyzer {
         }
         return coStarList.stream().filter(Objects::nonNull)
                 .collect(Collectors.groupingBy(Function.identity(), Collectors.summingInt(i -> 1)));
-
-//        return null;
     }
 
     /**
-     * This method returns the top K movies (parameter top_k) by the given criterion (parameter by).
+     * A method returns the top K movies (parameter top_k) by the given criterion (parameter by).
      * Specifically, by="runtime": the results should be movies sorted by descending order of
      * runtime (from the longest movies to the shortest movies) . by="overview": the results should
      * be movies sorted by descending order of the length of the overview (from movies with the
@@ -290,6 +155,127 @@ public class MovieAnalyzer {
 
     public List<String> searchMovies(String genre, float minRating, int maxRuntime) {
         return null;
+    }
+
+    /**
+     * The Movie class stores some movie information.
+     */
+    public static class Movie {
+
+        private final String seriesTitle;
+        private final Integer releasedYear;
+        private final String certificate;
+        private final Integer runtime;
+        private final List<String> genreList;
+        private final Float imdbRating;
+        private final String overview;
+        private final Integer metaScore;
+        private final String director;
+        private final String[] stars;
+
+        /*
+        private final String star1;
+        private final String star2;
+        private final String star3;
+        private final String star4;
+         */
+        private final Integer noOfVotes;
+        private final Integer gross;
+
+        /**
+         * The constructor of Movie.
+         *
+         * @param title       Name of the movie.
+         * @param year        Year at which that movie released.
+         * @param certificate Certificate earned by that movie.
+         * @param runtime     Total runtime of the movie.
+         * @param genreList   Genre of the movie.
+         * @param rating      Rating of the movie at IMDB site.
+         * @param overview    mini story / summary.
+         * @param score       Score earned by the movie.
+         * @param director    Name of the Director.
+         * @param star1       Name of the Stars.
+         * @param star2       Name of the Stars.
+         * @param star3       Name of the Stars.
+         * @param star4       Name of the Stars.
+         * @param noOfVotes   Total number of votes.
+         * @param gross       Money earned by that movie.
+         */
+
+        public Movie(String title, Integer year, String certificate, Integer runtime,
+                List<String> genreList,
+                Float rating, String overview, Integer score, String director, String star1,
+                String star2, String star3, String star4,
+                Integer noOfVotes, Integer gross) {
+            this.seriesTitle = title;
+            this.releasedYear = year;
+            this.certificate = certificate;
+            this.runtime = runtime;
+            this.genreList = genreList;
+            this.imdbRating = rating;
+            this.overview = overview;
+            this.metaScore = score;
+            this.director = director;
+            /*
+            this.star1 = star1;
+            this.star2 = star2;
+            this.star3 = star3;
+            this.star4 = star4;
+             */
+            this.stars = new String[]{star1, star2, star3, star4};
+            this.noOfVotes = noOfVotes;
+            this.gross = gross;
+        }
+
+        public String getSeriesTitle() {
+            return seriesTitle;
+        }
+
+        public Integer getReleasedYear() {
+            return releasedYear;
+        }
+
+        public List<String> getGenreList() {
+            return genreList;
+        }
+
+        /*
+        public String getStar1() {
+            return star1;
+        }
+
+        public String getStar2() {
+            return star2;
+        }
+
+        public String getStar3() {
+            return star3;
+        }
+
+        public String getStar4() {
+            return star4;
+        }
+         */
+
+        public String[] getStars() {
+            return stars;
+        }
+
+        /**
+         * Returns a string representation of all the values.
+         *
+         * @return a string representation of all the values.
+         */
+        public String toString() {
+            return String.format(
+                    "Movie{Title=%s, Year=%d, Certificate=%s, Runtime=%d, Genre=%s, IMDB_Rating=%f"
+                            + ", Meta_score=%d, Director=%s, Stars=%s, No_of_votes=%d, Gross=%d}",
+                    seriesTitle, releasedYear, certificate, runtime, genreList, imdbRating,
+                    metaScore,
+                    director,
+                    Arrays.toString(stars), noOfVotes, gross);
+        }
+
     }
 
 }
