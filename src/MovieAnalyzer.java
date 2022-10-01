@@ -111,12 +111,13 @@ public class MovieAnalyzer {
 
   private List<String> getCoStar(String star1, String star2) {
     List<String> stars = new ArrayList<>(2);
-    //不考虑重名？
-        /*
-        if (star1.equals(star2)) {
-            return null;
-        }
-         */
+    //handle same name?
+    /*
+    if (star1.equals(star2)) {
+      return null;
+    }
+     */
+
     if (star1.compareTo(star2) < 0) {
       stars.add(star1);
       stars.add(star2);
@@ -138,7 +139,10 @@ public class MovieAnalyzer {
    * @return a {@code <[star1, star2], count>} map
    */
   public Map<List<String>, Integer> getCoStarCount() {
-    // Approach 1: 先循环得到coStar的List<Lit<String>>， 再转stream计数
+    /*
+     Approach 1: get a List<Lit<String>> to present coStar by iteration first, then convert to
+     stream and sort.
+     */
     List<List<String>> coStarList = new ArrayList<>();
     for (Movie movie : movieList) {
       for (int i = 0; i < 4; i++) {
@@ -165,7 +169,6 @@ public class MovieAnalyzer {
    * @return a list of movie titles.
    */
   public List<String> getTopMovies(int topK, String by) {
-
     return movieList.stream().sorted((m1, m2) -> {
       switch (by) {
         case "runtime" -> {
@@ -256,12 +259,12 @@ public class MovieAnalyzer {
       this.overview = overview;
       this.metaScore = score;
       this.director = director;
-            /*
-            this.star1 = star1;
-            this.star2 = star2;
-            this.star3 = star3;
-            this.star4 = star4;
-             */
+      /*
+      this.star1 = star1;
+      this.star2 = star2;
+      this.star3 = star3;
+      this.star4 = star4;
+      */
       this.stars = new String[]{star1, star2, star3, star4};
       this.noOfVotes = noOfVotes;
       this.gross = gross;
@@ -279,23 +282,23 @@ public class MovieAnalyzer {
       return genreList;
     }
 
-        /*
-        public String getStar1() {
-            return star1;
-        }
+    /*
+    public String getStar1() {
+      return star1;
+    }
 
-        public String getStar2() {
-            return star2;
-        }
+    public String getStar2() {
+      return star2;
+    }
 
-        public String getStar3() {
-            return star3;
-        }
+    public String getStar3() {
+      return star3;
+    }
 
-        public String getStar4() {
-            return star4;
-        }
-         */
+    public String getStar4() {
+      return star4;
+    }
+     */
 
     /**
      * Returns a string representation of all the values.
