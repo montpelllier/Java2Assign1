@@ -51,19 +51,19 @@ public class MovieAnalyzer {
                 .skip(1) // skip the first row
                 .map(line -> line.split(",(?=([^\"]*\"[^\"]*\")*[^\"]*$)"))
                 .map(s -> {
+                    String seriesTitle = s[1].replaceAll("\"", "");
                     Integer year = s[2].equals("") ? null : Integer.parseInt(s[2]);
-                    Integer runtime =
-                            s[4].equals("") ? null
-                                    : Integer.parseInt(s[4].substring(0, s[4].length() - 4));
-                    String genre =
-                            s[5].contains("\"") ? s[5].substring(1, s[5].length() - 1) : s[5];
+                    Integer runtime = Integer.parseInt(s[4].substring(0, s[4].length() - 4));
+                    String genre = s[5].replaceAll("\"", "");
                     Float rating = s[6].equals("") ? null : Float.parseFloat(s[6]);
+                    String overview = s[7].replaceAll("\"", "");
                     Integer score = s[8].equals("") ? null : Integer.parseInt(s[8]);
                     Integer noOfVotes = s[14].equals("") ? null : Integer.parseInt(s[14]);
                     Integer gross = s.length == 16 && !s[15].equals("") ? Integer.parseInt(
                             s[15].substring(1, s[15].length() - 1).replace(",", "")) : null;
-                    return new Movie(s[1], year, s[3], runtime, Arrays.asList(genre.split(", ")),
-                            rating, s[7], score, s[9],
+                    return new Movie(seriesTitle, year, s[3], runtime,
+                            Arrays.asList(genre.split(", ")),
+                            rating, overview, score, s[9],
                             s[10], s[11], s[12], s[13], noOfVotes, gross);
                 });
     }
@@ -112,9 +112,11 @@ public class MovieAnalyzer {
     private List<String> getCoStar(String star1, String star2) {
         List<String> stars = new ArrayList<>(2);
         //不考虑重名？
-//        if (star1.equals(star2)) {
-//            return null;
-//        }
+        /*
+        if (star1.equals(star2)) {
+            return null;
+        }
+         */
         if (star1.compareTo(star2) < 0) {
             stars.add(star1);
             stars.add(star2);
@@ -163,7 +165,26 @@ public class MovieAnalyzer {
      * @return a list of movie titles.
      */
     public List<String> getTopMovies(int topK, String by) {
-        return null;
+
+        return movieList.stream().sorted((m1, m2) -> {
+            switch (by) {
+                case "runtime" -> {
+                    if (m1.runtime.equals(m2.runtime)) {
+                        return m1.seriesTitle.compareTo(m2.seriesTitle);
+                    } else {
+                        return m2.runtime.compareTo(m1.runtime);
+                    }
+                }
+                case "overview" -> {
+                    if (m1.overview.length() == m2.overview.length()) {
+                        return m1.seriesTitle.compareTo(m2.seriesTitle);
+                    } else {
+                        return m2.overview.length() - m1.overview.length();
+                    }
+                }
+            }
+            return 0;
+        }).map(movie -> movie.seriesTitle).limit(topK).toList();
     }
 
     public List<String> getTopStars(int topK, String by) {
@@ -273,10 +294,6 @@ public class MovieAnalyzer {
             return star4;
         }
          */
-
-        public String[] getStars() {
-            return stars;
-        }
 
         /**
          * Returns a string representation of all the values.
