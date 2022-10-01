@@ -1,10 +1,12 @@
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.TreeMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -30,11 +32,11 @@ public class MovieAnalyzer {
         private final String overview;
         private final Integer metaScore;
         private final String director;
-        //        private final String[] stars;
-        private final String star1;
-        private final String star2;
-        private final String star3;
-        private final String star4;
+        private final String[] stars;
+//        private final String star1;
+//        private final String star2;
+//        private final String star3;
+//        private final String star4;
 
         private final Integer noOfVotes;
         private final Integer gross;
@@ -50,6 +52,27 @@ public class MovieAnalyzer {
         public List<String> getGenreList() {
             return genreList;
         }
+
+        public String[] getStars() {
+            return stars;
+        }
+
+        //        public String getStar1() {
+//            return star1;
+//        }
+//
+//        public String getStar2() {
+//            return star2;
+//        }
+//
+//        public String getStar3() {
+//            return star3;
+//        }
+//
+//        public String getStar4() {
+//            return star4;
+//        }
+
 
         /**
          * The constructor of Movie.
@@ -85,10 +108,11 @@ public class MovieAnalyzer {
             this.overview = overview;
             this.metaScore = score;
             this.director = director;
-            this.star1 = star1;
-            this.star2 = star2;
-            this.star3 = star3;
-            this.star4 = star4;
+//            this.star1 = star1;
+//            this.star2 = star2;
+//            this.star3 = star3;
+//            this.star4 = star4;
+            this.stars = new String[]{star1, star2, star3, star4};
             this.noOfVotes = noOfVotes;
             this.gross = gross;
         }
@@ -105,7 +129,7 @@ public class MovieAnalyzer {
                     seriesTitle, releasedYear, certificate, runtime, genreList, imdbRating,
                     metaScore,
                     director,
-                    Arrays.toString(new String[]{star1, star2, star3, star4}), noOfVotes, gross);
+                    Arrays.toString(stars), noOfVotes, gross);
         }
 
     }
@@ -201,6 +225,22 @@ public class MovieAnalyzer {
                                 LinkedHashMap::new));
     }
 
+    private List<String> getCoStar(String star1, String star2) {
+        List<String> stars = new ArrayList<>(2);
+//        if (star1.equals(star2)) {
+//            return null;
+//        }
+        if (star1.compareTo(star2) < 0) {
+            stars.add(star1);
+            stars.add(star2);
+        } else {
+            stars.add(star2);
+            stars.add(star1);
+
+        }
+        return stars;
+    }
+
     /**
      * If two people are the stars for the same movie, then the number of movies that they
      * co-starred increases by 1. This method returns a {@code <[star1, star2], count>} map, where
@@ -211,9 +251,35 @@ public class MovieAnalyzer {
      * @return a {@code <[star1, star2], count>} map
      */
     public Map<List<String>, Integer> getCoStarCount() {
-        return null;
+        // Approach 1: 先得到循环得到List<Lit<String>>， 再转stream计数
+        // Approach 2: 重写hashCode和equals方法？
+        List<List<String>> coStarList = new ArrayList<>();
+        for (Movie movie : movieList) {
+            for (int i = 0; i < 4; i++) {
+                for (int j = i + 1; j < 4; j++) {
+                    coStarList.add(getCoStar(movie.stars[i], movie.stars[j]));
+                }
+            }
+        }
+        return coStarList.stream().filter(Objects::nonNull)
+                .collect(Collectors.groupingBy(Function.identity(), Collectors.summingInt(i -> 1)));
+
+//        return null;
     }
 
+    /**
+     * This method returns the top K movies (parameter top_k) by the given criterion (parameter by).
+     * Specifically, by="runtime": the results should be movies sorted by descending order of
+     * runtime (from the longest movies to the shortest movies) . by="overview": the results should
+     * be movies sorted by descending order of the length of the overview (from movies with the
+     * longest overview to movies with the shortest overview). Note that the results should be a
+     * list of movie titles. If two movies have the same runtime or overview length, then they
+     * should be sorted by alphabetical order of their titles.
+     *
+     * @param topK The top number.
+     * @param by   The given criterion.
+     * @return a list of movie titles.
+     */
     public List<String> getTopMovies(int topK, String by) {
         return null;
     }
