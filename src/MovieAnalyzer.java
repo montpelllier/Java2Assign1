@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.TreeMap;
 import java.util.function.Function;
@@ -209,35 +210,34 @@ public class MovieAnalyzer {
    */
   public List<String> getTopStars(int topK, String by) {
 
-    Stream<Star> starStream0 = movieList.stream().map(movie -> new Star(movie.stars[0], movie.imdbRating, movie.gross));
-    Stream<Star> starStream1 = movieList.stream().map(movie -> new Star(movie.stars[1], movie.imdbRating, movie.gross));
-    Stream<Star> starStream2 = movieList.stream().map(movie -> new Star(movie.stars[2], movie.imdbRating, movie.gross));
-    Stream<Star> starStream3 = movieList.stream().map(movie -> new Star(movie.stars[3], movie.imdbRating, movie.gross));
-    Stream<Star> starStream = Stream.of(starStream0, starStream1, starStream2, starStream3).flatMap(stream -> stream);
+    Stream<Star> starStream0 = movieList.stream()
+        .map(movie -> new Star(movie.stars[0], movie.imdbRating, movie.gross));
+    Stream<Star> starStream1 = movieList.stream()
+        .map(movie -> new Star(movie.stars[1], movie.imdbRating, movie.gross));
+    Stream<Star> starStream2 = movieList.stream()
+        .map(movie -> new Star(movie.stars[2], movie.imdbRating, movie.gross));
+    Stream<Star> starStream3 = movieList.stream()
+        .map(movie -> new Star(movie.stars[3], movie.imdbRating, movie.gross));
+    Stream<Star> starStream = Stream.of(starStream0, starStream1, starStream2, starStream3)
+        .flatMap(stream -> stream);
+    Map<String, Double> unsortedMap;
+    switch (by) {
+      case "rating" -> unsortedMap = starStream.collect(
+          Collectors.groupingBy(star -> star.name, Collectors.averagingDouble(Star::getRating)));
+      case "gross" -> unsortedMap = starStream.filter(star -> star.getGross() != null).collect(
+          Collectors.groupingBy(star -> star.name, Collectors.averagingInt(Star::getGross)));
+      default -> {
+        return null;
+      }
+    }
 
-    return
-//        starStream.collect()
-//            sorted((star1, star2) -> {
-//              switch (by) {
-//                case "rating" -> {
-//                  if (star1.rating.equals(star2.rating)) {
-//                    return m1.seriesTitle.compareTo(m2.seriesTitle);
-//                  } else {
-//                    return m2.runtime.compareTo(m1.runtime);
-//                  }
-//                }
-//                case "gross" -> {
-//                  if (m1.overview.length() == m2.overview.length()) {
-//                    return m1.seriesTitle.compareTo(m2.seriesTitle);
-//                  } else {
-//                    return m2.overview.length() - m1.overview.length();
-//                  }
-//                }
-//                default -> {
-//                  return 0;
-//                }
-//              }
-//            }).map(movie -> movie.seriesTitle).limit(topK).toList();
+    return unsortedMap.entrySet().stream().sorted((s1, s2) -> {
+      if (s1.getValue().equals(s2.getValue())) {
+        return s1.getKey().compareTo(s2.getKey());
+      } else {
+        return s2.getValue().compareTo(s1.getValue());
+      }
+    }).map(Entry::getKey).limit(topK).toList();
   }
 
   public List<String> searchMovies(String genre, float minRating, int maxRuntime) {
@@ -367,14 +367,27 @@ public class MovieAnalyzer {
 
   public static class Star {
 
-    private String name;
-    private Float rating;
-    private Integer gross;
+    private final String name;
+    private final Float rating;
+    private final Integer gross;
 
     public Star(String name, Float rating, Integer gross) {
       this.name = name;
       this.rating = rating;
       this.gross = gross;
     }
+
+    public String getName() {
+      return name;
+    }
+
+    public Float getRating() {
+      return rating;
+    }
+
+    public Integer getGross() {
+      return gross;
+    }
+
   }
 }
