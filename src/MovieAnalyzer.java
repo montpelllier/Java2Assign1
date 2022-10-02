@@ -56,11 +56,15 @@ public class MovieAnalyzer {
           Integer runtime = Integer.parseInt(s[4].substring(0, s[4].length() - 4));
           String genre = s[5].replaceAll("\"", "");
           Float rating = s[6].equals("") ? null : Float.parseFloat(s[6]);
-          String overview = s[7].replaceAll("\"", "");
+          // Note: don't handle \"\" in the overview string
+          String overview =
+              s[7].contains(",") || s[7].contains("\"\"") ? s[7].substring(1, s[7].length() - 1)
+                  : s[7];
           Integer score = s[8].equals("") ? null : Integer.parseInt(s[8]);
           Integer noOfVotes = s[14].equals("") ? null : Integer.parseInt(s[14]);
           Integer gross = s.length == 16 && !s[15].equals("") ? Integer.parseInt(
               s[15].substring(1, s[15].length() - 1).replace(",", "")) : null;
+
           return new Movie(seriesTitle, year, s[3], runtime,
               Arrays.asList(genre.split(", ")),
               rating, overview, score, s[9],
@@ -204,27 +208,36 @@ public class MovieAnalyzer {
    * @return a list of star names.
    */
   public List<String> getTopStars(int topK, String by) {
-    return movieList.stream().sorted((m1, m2) -> {
-      switch (by) {
-        case "rating" -> {
-          if (m1.runtime.equals(m2.runtime)) {
-            return m1.seriesTitle.compareTo(m2.seriesTitle);
-          } else {
-            return m2.runtime.compareTo(m1.runtime);
-          }
-        }
-        case "gross" -> {
-          if (m1.overview.length() == m2.overview.length()) {
-            return m1.seriesTitle.compareTo(m2.seriesTitle);
-          } else {
-            return m2.overview.length() - m1.overview.length();
-          }
-        }
-        default -> {
-          return 0;
-        }
-      }
-    }).map(movie -> movie.seriesTitle).limit(topK).toList();
+
+    Stream<Star> starStream0 = movieList.stream().map(movie -> new Star(movie.stars[0], movie.imdbRating, movie.gross));
+    Stream<Star> starStream1 = movieList.stream().map(movie -> new Star(movie.stars[1], movie.imdbRating, movie.gross));
+    Stream<Star> starStream2 = movieList.stream().map(movie -> new Star(movie.stars[2], movie.imdbRating, movie.gross));
+    Stream<Star> starStream3 = movieList.stream().map(movie -> new Star(movie.stars[3], movie.imdbRating, movie.gross));
+    Stream<Star> starStream = Stream.of(starStream0, starStream1, starStream2, starStream3).flatMap(stream -> stream);
+
+    return
+//        starStream.collect()
+//            sorted((star1, star2) -> {
+//              switch (by) {
+//                case "rating" -> {
+//                  if (star1.rating.equals(star2.rating)) {
+//                    return m1.seriesTitle.compareTo(m2.seriesTitle);
+//                  } else {
+//                    return m2.runtime.compareTo(m1.runtime);
+//                  }
+//                }
+//                case "gross" -> {
+//                  if (m1.overview.length() == m2.overview.length()) {
+//                    return m1.seriesTitle.compareTo(m2.seriesTitle);
+//                  } else {
+//                    return m2.overview.length() - m1.overview.length();
+//                  }
+//                }
+//                default -> {
+//                  return 0;
+//                }
+//              }
+//            }).map(movie -> movie.seriesTitle).limit(topK).toList();
   }
 
   public List<String> searchMovies(String genre, float minRating, int maxRuntime) {
@@ -331,6 +344,10 @@ public class MovieAnalyzer {
     }
      */
 
+    public String getOverview() {
+      return overview;
+    }
+
     /**
      * Returns a string representation of all the values.
      *
@@ -348,4 +365,16 @@ public class MovieAnalyzer {
 
   }
 
+  public static class Star {
+
+    private String name;
+    private Float rating;
+    private Integer gross;
+
+    public Star(String name, Float rating, Integer gross) {
+      this.name = name;
+      this.rating = rating;
+      this.gross = gross;
+    }
+  }
 }
