@@ -246,8 +246,7 @@ public class MovieAnalyzer {
    * @param genre      genre of the movie.
    * @param minRating  the rating of the movie should >= min_rating.
    * @param maxRuntime the runtime (min) of the movie should <= * max_runtime.
-   * @return a list of movie titles that meet the given criteria, and sorted by alphabetical order
-   * of the titles.
+   * @return a list of movie titles that meet the given criteria, and sorted by alphabetical order.
    */
   public List<String> searchMovies(String genre, float minRating, int maxRuntime) {
     return movieList.stream().filter(
@@ -376,6 +375,13 @@ public class MovieAnalyzer {
 
   }
 
+  /**
+   * The Star class stores star name, movie rating and gross.
+   *
+   * @param name   star name.
+   * @param rating movie rating.
+   * @param gross  movie gross.
+   */
   public record Star(String name, Float rating, Integer gross) {
 
   }
