@@ -97,7 +97,7 @@ public class MovieAnalyzer {
    * @return a {@code <genre, count>} map
    */
   public Map<String, Integer> getMovieCountByGenre() {
-    // Approach 1: 先合并List<String>的stream得到未排序的map，再对map进行降序排序等操作
+    // Approach 1: merge stream of List<String> to get an unsorted map, then sort it.
     Map<String, Integer> unsortedMap = movieList.stream()
         .filter(movie -> movie.getGenreList() != null)
         .flatMap(movie -> movie.getGenreList().stream()).collect(
