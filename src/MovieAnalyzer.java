@@ -223,9 +223,9 @@ public class MovieAnalyzer {
     Map<String, Double> unsortedMap;
     switch (by) {
       case "rating" -> unsortedMap = starStream.collect(
-          Collectors.groupingBy(star -> star.name, Collectors.averagingDouble(Star::getRating)));
-      case "gross" -> unsortedMap = starStream.filter(star -> star.getGross() != null).collect(
-          Collectors.groupingBy(star -> star.name, Collectors.averagingInt(Star::getGross)));
+          Collectors.groupingBy(star -> star.name, Collectors.averagingDouble(Star::rating)));
+      case "gross" -> unsortedMap = starStream.filter(star -> star.gross() != null).collect(
+          Collectors.groupingBy(star -> star.name, Collectors.averagingInt(Star::gross)));
       default -> {
         return null;
       }
@@ -240,8 +240,19 @@ public class MovieAnalyzer {
     }).map(Entry::getKey).limit(topK).toList();
   }
 
+  /**
+   * A method searches movies based on three criterion: genre, min_rating, and max_runtime.
+   *
+   * @param genre      genre of the movie.
+   * @param minRating  the rating of the movie should >= min_rating.
+   * @param maxRuntime the runtime (min) of the movie should <= * max_runtime.
+   * @return a list of movie titles that meet the given criteria, and sorted by alphabetical order
+   * of the titles.
+   */
   public List<String> searchMovies(String genre, float minRating, int maxRuntime) {
-    return null;
+    return movieList.stream().filter(
+        movie -> movie.genreList.contains(genre) && movie.imdbRating >= minRating
+            && movie.runtime <= maxRuntime).map(movie -> movie.seriesTitle).sorted().toList();
   }
 
   /**
@@ -365,29 +376,7 @@ public class MovieAnalyzer {
 
   }
 
-  public static class Star {
-
-    private final String name;
-    private final Float rating;
-    private final Integer gross;
-
-    public Star(String name, Float rating, Integer gross) {
-      this.name = name;
-      this.rating = rating;
-      this.gross = gross;
-    }
-
-    public String getName() {
-      return name;
-    }
-
-    public Float getRating() {
-      return rating;
-    }
-
-    public Integer getGross() {
-      return gross;
-    }
+  public record Star(String name, Float rating, Integer gross) {
 
   }
 }
